@@ -6,7 +6,7 @@ setlocal enabledelayedexpansion
 set "INSTALL_DIR=%LOCALAPPDATA%\Sokuten"
 set "EXE=%INSTALL_DIR%\sokuten.exe"
 set "URL=https://github.com/S23Web3/sokuten/releases/latest/download/sokuten.exe"
-set "SHA256=46cc574bfdc87b10a20052e9e4c7348c5a2d50360852b36c21a68490cbafcd01"
+set "SHA256=e83d3df9827b892a381667ea47c3a0cf0a21b14c2de4059aa049f1bc1cf3442a"
 set "TMPFILE=%TEMP%\sokuten_download.exe"
 set "STARTMENU=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Sokuten.lnk"
 set "STARTUPLNK=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Sokuten.lnk"
