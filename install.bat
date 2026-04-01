@@ -57,20 +57,14 @@ move /y "%TMPFILE%" "%EXE%" >nul
 echo  [OK] Installed to %INSTALL_DIR%
 
 :: --- Start Menu shortcut -----------------------------------------------
-powershell -NoProfile -Command ^
-  "$ws = New-Object -ComObject WScript.Shell; ^
-   $lnk = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('StartMenu'),'Programs','Sokuten.lnk')); ^
-   $lnk.TargetPath = '%EXE%'; $lnk.Description = 'Sokuten text expander'; $lnk.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $lnk = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('StartMenu'),'Programs','Sokuten.lnk')); $lnk.TargetPath = '%EXE%'; $lnk.Description = 'Sokuten text expander'; $lnk.Save()"
 echo  [OK] Start Menu shortcut created
 
 :: --- Startup (optional) ------------------------------------------------
 echo.
 choice /c YN /m "  Add Sokuten to Windows startup"
 if errorlevel 2 goto :skip_startup
-powershell -NoProfile -Command ^
-  "$ws = New-Object -ComObject WScript.Shell; ^
-   $lnk = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Startup'),'Sokuten.lnk')); ^
-   $lnk.TargetPath = '%EXE%'; $lnk.Description = 'Sokuten text expander'; $lnk.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $lnk = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Startup'),'Sokuten.lnk')); $lnk.TargetPath = '%EXE%'; $lnk.Description = 'Sokuten text expander'; $lnk.Save()"
 echo  [OK] Added to startup
 :skip_startup
 
