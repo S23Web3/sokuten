@@ -1,68 +1,90 @@
 @echo off
-:: Sokuten (速貼) Installer
-:: Downloads and installs Sokuten to your local AppData folder.
-
-echo.
-echo  ========================================
-echo    Sokuten Installer
-echo    Windows text expander
-echo  ========================================
-echo.
+:: Sokuten (速貼) — Installer
+:: Double-click to install. No Rust, no dependencies.
+setlocal
 
 set "INSTALL_DIR=%LOCALAPPDATA%\Sokuten"
 set "EXE=%INSTALL_DIR%\sokuten.exe"
-set "DOWNLOAD_URL=https://github.com/S23Web3/sokuten/releases/latest/download/sokuten.exe"
+set "URL=https://github.com/S23Web3/sokuten/releases/latest/download/sokuten.exe"
+set "SHA256=46cc574bfdc87b10a20052e9e4c7348c5a2d50360852b36c21a68490cbafcd01"
+set "TMPFILE=%TEMP%\sokuten_download.exe"
 
-:: Create install directory
-if not exist "%INSTALL_DIR%" (
-    mkdir "%INSTALL_DIR%"
-    echo  [+] Created %INSTALL_DIR%
-) else (
-    echo  [i] Install folder already exists
-)
+echo.
+echo  ============================================
+echo    Sokuten  --  Windows text expander
+echo    Installing...
+echo  ============================================
+echo.
 
-:: Download using curl.exe (built into Windows 10/11)
+:: --- Download -----------------------------------------------------------
+echo  Downloading sokuten.exe from GitHub...
 echo.
-echo  Downloading sokuten.exe ...
-echo.
-curl.exe -L --progress-bar --output "%EXE%" "%DOWNLOAD_URL%"
+curl.exe -L --progress-bar --fail --output "%TMPFILE%" "%URL%"
 if errorlevel 1 (
     echo.
-    echo  [!] Download failed.
-    echo.
-    echo  Please download manually from:
-    echo  https://github.com/S23Web3/sokuten/releases
-    echo.
-    pause
-    exit /b 1
+    echo  [ERROR] Download failed. Check your internet connection.
+    echo  Manual download: https://github.com/S23Web3/sokuten/releases
+    goto :fail
 )
 
-echo.
-echo  [+] Download complete
-
-:: Create Start Menu shortcut
-echo  Creating Start Menu shortcut ...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('StartMenu'), 'Programs', 'Sokuten.lnk')); $sc.TargetPath = '%EXE%'; $sc.Description = 'Sokuten text expander'; $sc.Save()"
-echo  [+] Start Menu shortcut created
-
-:: Ask about startup
-echo.
-set /p STARTUP="  Run Sokuten on Windows startup? (Y/N): "
-if /i "%STARTUP%"=="Y" (
-    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Startup'), 'Sokuten.lnk')); $sc.TargetPath = '%EXE%'; $sc.Description = 'Sokuten text expander'; $sc.Save()"
-    echo  [+] Added to startup
+:: --- Verify size (must be > 4 MB = 4000000 bytes) ----------------------
+for %%F in ("%TMPFILE%") do set "FSIZE=%%~zF"
+if %FSIZE% LSS 4000000 (
+    echo.
+    echo  [ERROR] Downloaded file is too small (%FSIZE% bytes^).
+    echo  The file may be corrupted. Please try again.
+    del "%TMPFILE%" 2>nul
+    goto :fail
 )
 
+:: --- Verify SHA256 checksum --------------------------------------------
 echo.
-echo  ========================================
-echo    Installation complete!
+echo  Verifying file integrity...
+for /f "tokens=1" %%H in ('certutil -hashfile "%TMPFILE%" SHA256 ^| findstr /v "hash" ^| findstr /v "CertUtil"') do set "ACTUAL=%%H"
+if /i not "%ACTUAL%"=="%SHA256%" (
+    echo.
+    echo  [ERROR] Checksum mismatch — file may be corrupted or tampered.
+    echo  Expected: %SHA256%
+    echo  Got:      %ACTUAL%
+    del "%TMPFILE%" 2>nul
+    goto :fail
+)
+echo  [OK] Checksum verified
+
+:: --- Install -----------------------------------------------------------
+if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
+move /y "%TMPFILE%" "%EXE%" >nul
+echo  [OK] Installed to %INSTALL_DIR%
+
+:: --- Start Menu shortcut -----------------------------------------------
+powershell -NoProfile -Command ^
+  "$ws = New-Object -ComObject WScript.Shell; ^
+   $lnk = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('StartMenu'),'Programs','Sokuten.lnk')); ^
+   $lnk.TargetPath = '%EXE%'; $lnk.Description = 'Sokuten text expander'; $lnk.Save()"
+echo  [OK] Start Menu shortcut created
+
+:: --- Startup (optional) ------------------------------------------------
 echo.
-echo    Installed to: %INSTALL_DIR%
-echo    Start Menu:   Sokuten
+choice /c YN /m "  Add Sokuten to Windows startup"
+if errorlevel 2 goto :skip_startup
+powershell -NoProfile -Command ^
+  "$ws = New-Object -ComObject WScript.Shell; ^
+   $lnk = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Startup'),'Sokuten.lnk')); ^
+   $lnk.TargetPath = '%EXE%'; $lnk.Description = 'Sokuten text expander'; $lnk.Save()"
+echo  [OK] Added to startup
+:skip_startup
+
 echo.
-echo    Launching Sokuten now...
-echo  ========================================
+echo  ============================================
+echo    Done! Launching Sokuten now.
+echo  ============================================
+echo.
+start "" "%EXE%"
+endlocal
+exit /b 0
+
+:fail
 echo.
 pause
-
-start "" "%EXE%"
+endlocal
+exit /b 1
