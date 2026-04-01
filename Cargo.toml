@@ -1,0 +1,52 @@
+[package]
+name = "sokuten"
+version = "0.1.0"
+edition = "2021"
+description = "速貼 — Windows 11 system-tray text expander. Type once, paste many times."
+license = "MIT"
+repository = "https://github.com/S23Web3/sokuten"
+readme = "README.md"
+keywords = ["text-expander", "windows", "tray", "keyboard"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "sokuten"
+path = "src/main.rs"
+
+[dependencies]
+windows = { version = "0.58", features = [
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Foundation"
+] }
+tray-icon = "0.19"
+muda = "0.15"
+eframe = "0.29"
+egui = "0.29"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+single-instance = "0.3"
+mimalloc = "0.1"
+
+[dev-dependencies]
+tempfile = "3"
+
+[build-dependencies]
+embed-resource = "3"
+
+# Encode clippy deny-warnings in Cargo.toml so `cargo clippy` needs no
+# `-- -D warnings` flag on the command line — prevents Claude Code's
+# "quoted characters in flag names" safety prompt.
+[lints.clippy]
+all = "warn"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

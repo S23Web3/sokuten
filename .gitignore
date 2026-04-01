@@ -1,0 +1,6 @@
+/target/
+*.exe
+*.pdb
+*.ilk
+.gate_approved
+CLAUDE.md

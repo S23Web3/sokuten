@@ -1,0 +1,4 @@
+// Sokuten resource script
+// Icon and manifest embedding for Windows
+1 ICON "sokuten.ico"
+1 24 "sokuten.manifest"
