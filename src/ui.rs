@@ -113,7 +113,12 @@ pub fn run(hotkey_rx: Receiver<i32>, tray_menu_ids: TrayMenuIds) -> Result<()> {
     });
 
     let theme = config.theme;
-    let compact = config.compact_mode;
+    // Force full mode on first run (no phrases) so the add form is visible.
+    let compact = if phrases.is_empty() {
+        false
+    } else {
+        config.compact_mode
+    };
     let saved_pos = config.window_pos;
     let paste_delay = config.paste_delay_ms;
     let disclaimer = config.disclaimer_accepted;
@@ -529,6 +534,8 @@ impl SokutenApp {
     /// - Single click — select
     /// - Double-click / [▶] button — paste immediately
     /// - [✕] button — delete phrase
+    ///
+    /// Shows a quick-start guide when the list is empty.
     fn show_phrase_list(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
         // Collect filtered indices FIRST (no lifetime ties to self.phrases),
         // so we can freely mutate self inside the scroll-area closure below.
@@ -572,13 +579,34 @@ impl SokutenApp {
 
         egui::ScrollArea::vertical().show(ui, |ui| {
             if indices.is_empty() {
-                ui.centered_and_justified(|ui| {
-                    ui.label(if empty_search {
-                        "No phrases saved yet."
-                    } else {
-                        "No phrases match."
+                ui.add_space(16.0);
+                if empty_search {
+                    ui.vertical_centered(|ui| {
+                        ui.label("No phrases saved yet.");
+                        ui.add_space(12.0);
+                        ui.label("─── Quick start ───");
+                        ui.add_space(8.0);
+                        ui.label("1. Type a Label  (e.g. \"greeting\")");
+                        ui.label("2. Type the Text to paste");
+                        ui.label("3. Click  Add Phrase");
+                        ui.add_space(12.0);
+                        ui.label("─── To paste ───");
+                        ui.add_space(8.0);
+                        ui.label("Click  ▶  next to any phrase");
+                        ui.label("or double-click the phrase name");
+                        ui.label("or press Enter after selecting one");
+                        ui.add_space(12.0);
+                        ui.label("─── Hotkeys ───");
+                        ui.add_space(8.0);
+                        ui.label("Ctrl+Shift+Space  →  show / hide");
+                        ui.label("Ctrl+Shift+V       →  paste first phrase");
+                        ui.label("Escape             →  hide window");
                     });
-                });
+                } else {
+                    ui.centered_and_justified(|ui| {
+                        ui.label("No phrases match.");
+                    });
+                }
             } else {
                 for (list_pos, &real_idx) in indices.iter().enumerate() {
                     let selected = new_sel == Some(list_pos);
