@@ -4,49 +4,53 @@
 
 echo.
 echo  ========================================
-echo    Sokuten (速貼) Installer
+echo    Sokuten Installer
 echo    Windows text expander
 echo  ========================================
 echo.
 
 set "INSTALL_DIR=%LOCALAPPDATA%\Sokuten"
 set "EXE=%INSTALL_DIR%\sokuten.exe"
-set "REPO=S23Web3/sokuten"
-set "DOWNLOAD_URL=https://github.com/%REPO%/releases/latest/download/sokuten.exe"
+set "DOWNLOAD_URL=https://github.com/S23Web3/sokuten/releases/latest/download/sokuten.exe"
 
 :: Create install directory
 if not exist "%INSTALL_DIR%" (
     mkdir "%INSTALL_DIR%"
     echo  [+] Created %INSTALL_DIR%
 ) else (
-    echo  [i] Install directory already exists
+    echo  [i] Install folder already exists
 )
 
-:: Download the latest release
+:: Download using curl.exe (built into Windows 10/11)
 echo.
 echo  Downloading sokuten.exe ...
 echo.
-powershell -Command "try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile '%EXE%' -UseBasicParsing; Write-Host '  [+] Download complete' } catch { Write-Host '  [!] Download failed:' $_.Exception.Message; exit 1 }"
+curl.exe -L --progress-bar --output "%EXE%" "%DOWNLOAD_URL%"
 if errorlevel 1 (
     echo.
-    echo  Download failed. Please check your internet connection
-    echo  or download manually from:
-    echo  https://github.com/%REPO%/releases
+    echo  [!] Download failed.
+    echo.
+    echo  Please download manually from:
+    echo  https://github.com/S23Web3/sokuten/releases
     echo.
     pause
     exit /b 1
 )
 
-:: Create Start Menu shortcut
 echo.
+echo  [+] Download complete
+
+:: Create Start Menu shortcut
 echo  Creating Start Menu shortcut ...
-powershell -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('StartMenu'), 'Programs', 'Sokuten.lnk')); $sc.TargetPath = '%EXE%'; $sc.Description = 'Sokuten text expander'; $sc.Save(); Write-Host '  [+] Shortcut created'"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('StartMenu'), 'Programs', 'Sokuten.lnk')); $sc.TargetPath = '%EXE%'; $sc.Description = 'Sokuten text expander'; $sc.Save()"
+echo  [+] Start Menu shortcut created
 
 :: Ask about startup
 echo.
 set /p STARTUP="  Run Sokuten on Windows startup? (Y/N): "
 if /i "%STARTUP%"=="Y" (
-    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Startup'), 'Sokuten.lnk')); $sc.TargetPath = '%EXE%'; $sc.Description = 'Sokuten text expander'; $sc.Save(); Write-Host '  [+] Added to startup'"
+    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Startup'), 'Sokuten.lnk')); $sc.TargetPath = '%EXE%'; $sc.Description = 'Sokuten text expander'; $sc.Save()"
+    echo  [+] Added to startup
 )
 
 echo.
@@ -56,7 +60,7 @@ echo.
 echo    Installed to: %INSTALL_DIR%
 echo    Start Menu:   Sokuten
 echo.
-echo    To run now, press any key.
+echo    Launching Sokuten now...
 echo  ========================================
 echo.
 pause
